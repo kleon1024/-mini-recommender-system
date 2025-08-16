@@ -7,11 +7,12 @@ from models.models import Post, User, Event
 from schemas import schemas
 from services.recommender import RecommenderService
 from routers import likes, favorites
+from redis_client import record_user_viewed_post
 
 router = APIRouter()
 
 @router.get("/posts", response_model=schemas.RecommendationResponse)
-def get_posts(user_id: str = Query(..., description="用户ID"),
+def get_posts(user_id: int = Query(..., description="用户ID"),
               count: int = Query(10, description="返回数量"),
               offset: int = Query(0, description="偏移量"),
               filters: Optional[str] = Query(None, description="过滤条件，JSON字符串格式"),
@@ -32,8 +33,8 @@ def get_posts(user_id: str = Query(..., description="用户ID"),
     return recommendations
 
 @router.get("/posts/{post_id}", response_model=schemas.PostDetailResponse)
-def get_post_detail(post_id: str = Path(..., description="帖子ID"),
-                    user_id: Optional[str] = Query(None, description="用户ID，用于个性化相关推荐"),
+def get_post_detail(post_id: int = Path(..., description="帖子ID"),
+                    user_id: Optional[int] = Query(None, description="用户ID，用于个性化相关推荐"),
                     db: Session = Depends(get_db)):
     """
     获取帖子详情
@@ -47,6 +48,10 @@ def get_post_detail(post_id: str = Path(..., description="帖子ID"),
     # 增加浏览计数
     post.view_count += 1
     db.commit()
+    
+    # 如果提供了用户ID，记录用户浏览记录到Redis
+    if user_id:
+        record_user_viewed_post(user_id, post_id)
     
     # 获取作者信息
     author = db.query(User).filter(User.user_id == post.author_id).first()
@@ -88,8 +93,8 @@ def get_post_detail(post_id: str = Path(..., description="帖子ID"),
     return response
 
 @router.get("/posts/{post_id}/related", response_model=List[schemas.PostResponse])
-def get_related_posts(post_id: str = Path(..., description="帖子ID"),
-                      user_id: Optional[str] = Query(None, description="用户ID，用于个性化相关推荐"),
+def get_related_posts(post_id: int = Path(..., description="帖子ID"),
+                      user_id: Optional[int] = Query(None, description="用户ID，用于个性化相关推荐"),
                       count: int = Query(5, description="返回数量"),
                       db: Session = Depends(get_db)):
     """

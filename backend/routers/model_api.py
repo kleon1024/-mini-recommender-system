@@ -45,7 +45,7 @@ def trigger_model_training(task: schemas.ModelTaskCreate, db: Session = Depends(
     )
 
 @router.get("/models/train/{task_id}", response_model=schemas.ModelTaskResponse)
-def get_model_training_status(task_id: str, db: Session = Depends(get_db)):
+def get_model_training_status(task_id: int, db: Session = Depends(get_db)):
     """
     获取模型训练任务状态
     """

@@ -4,28 +4,28 @@ from datetime import datetime
 
 # 点赞和收藏相关模式
 class LikeBase(BaseModel):
-    user_id: str
-    post_id: str
+    user_id: int
+    post_id: int
     
 class LikeCreate(LikeBase):
     pass
 
 class LikeResponse(LikeBase):
-    like_id: str
+    like_id: int
     create_time: datetime
     
     class Config:
         orm_mode = True
 
 class FavoriteBase(BaseModel):
-    user_id: str
-    post_id: str
+    user_id: int
+    post_id: int
     
 class FavoriteCreate(FavoriteBase):
     pass
 
 class FavoriteResponse(FavoriteBase):
-    favorite_id: str
+    favorite_id: int
     create_time: datetime
     
     class Config:
@@ -44,7 +44,7 @@ class UserUpdate(UserBase):
     username: Optional[str] = None
 
 class UserResponse(UserBase):
-    user_id: str
+    user_id: int
     create_time: datetime
     
     class Config:
@@ -57,15 +57,15 @@ class PostBase(BaseModel):
     tags: Optional[Dict[str, Any]] = None
 
 class PostCreate(PostBase):
-    author_id: str
+    author_id: int
 
 class PostUpdate(PostBase):
     title: Optional[str] = None
     content: Optional[str] = None
 
 class PostResponse(PostBase):
-    post_id: str
-    author_id: str
+    post_id: int
+    author_id: int
     create_time: datetime
     view_count: int
     like_count: int
@@ -84,8 +84,8 @@ class PostDetailResponse(PostResponse):
 
 # 行为相关模式
 class EventBase(BaseModel):
-    user_id: str
-    post_id: str
+    user_id: int
+    post_id: int
     event_type: str
     source: Optional[str] = None
     device_info: Optional[Dict[str, Any]] = None
@@ -95,7 +95,7 @@ class EventCreate(EventBase):
     pass
 
 class EventResponse(EventBase):
-    event_id: str
+    event_id: int
     timestamp: datetime
     
     class Config:
@@ -108,7 +108,7 @@ class BatchEventCreate(BaseModel):
 # 特征相关模式
 class FeatureBase(BaseModel):
     entity_type: str
-    entity_id: str
+    entity_id: int
     feature_type: str
     feature_value: Dict[str, Any]
 
@@ -119,7 +119,7 @@ class FeatureUpdate(BaseModel):
     feature_value: Dict[str, Any]
 
 class FeatureResponse(FeatureBase):
-    feature_id: str
+    feature_id: int
     update_time: datetime
     
     class Config:
@@ -127,7 +127,7 @@ class FeatureResponse(FeatureBase):
 
 # 推荐相关模式
 class RecommendationRequest(BaseModel):
-    user_id: str
+    user_id: int
     count: int = 10
     offset: int = 0
     filters: Optional[Dict[str, Any]] = None
@@ -143,7 +143,7 @@ class DataTaskCreate(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 class DataTaskResponse(BaseModel):
-    task_id: str
+    task_id: int
     task_type: str
     status: str
     created_at: datetime
@@ -156,7 +156,7 @@ class ModelTaskCreate(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 class ModelTaskResponse(BaseModel):
-    task_id: str
+    task_id: int
     model_type: str
     status: str
     created_at: datetime

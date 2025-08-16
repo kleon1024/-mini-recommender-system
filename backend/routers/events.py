@@ -5,6 +5,7 @@ from typing import List
 from database import get_db
 from models.models import Event, User, Post
 from schemas import schemas
+from redis_client import record_user_viewed_post
 
 router = APIRouter()
 
@@ -14,12 +15,12 @@ def create_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
     创建单个用户行为事件
     """
     # 验证用户是否存在
-    user = db.query(User).filter(User.user_id == event.user_id).first()
+    user = db.query(User).filter(User.user_id == int(event.user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     # 验证帖子是否存在
-    post = db.query(Post).filter(Post.post_id == event.post_id).first()
+    post = db.query(Post).filter(Post.post_id == int(event.post_id)).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
@@ -41,6 +42,10 @@ def create_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
     elif event.event_type == "favorite":
         post.favorite_count += 1
     
+    # 如果是浏览或点击事件，记录到Redis中用于消重
+    if event.event_type in ["view", "click"]:
+        record_user_viewed_post(event.user_id, event.post_id)
+    
     db.commit()
     db.refresh(db_event)
     
@@ -52,8 +57,8 @@ def create_batch_events(batch: schemas.BatchEventCreate, db: Session = Depends(g
     批量创建用户行为事件
     """
     # 验证所有用户和帖子是否存在
-    user_ids = set([event.user_id for event in batch.events])
-    post_ids = set([event.post_id for event in batch.events])
+    user_ids = set([int(event.user_id) for event in batch.events])
+    post_ids = set([int(event.post_id) for event in batch.events])
     
     users = db.query(User).filter(User.user_id.in_(user_ids)).all()
     posts = db.query(Post).filter(Post.post_id.in_(post_ids)).all()
@@ -87,6 +92,10 @@ def create_batch_events(batch: schemas.BatchEventCreate, db: Session = Depends(g
             post_like_counts[event.post_id] = post_like_counts.get(event.post_id, 0) + 1
         elif event.event_type == "favorite":
             post_favorite_counts[event.post_id] = post_favorite_counts.get(event.post_id, 0) + 1
+        
+        # 如果是浏览或点击事件，记录到Redis中用于消重
+        if event.event_type in ["view", "click"]:
+            record_user_viewed_post(int(event.user_id), int(event.post_id))
     
     # 批量添加事件
     db.add_all(db_events)
@@ -107,7 +116,7 @@ def create_batch_events(batch: schemas.BatchEventCreate, db: Session = Depends(g
     return db_events
 
 @router.get("/events/user/{user_id}", response_model=List[schemas.EventResponse])
-def get_user_events(user_id: str, limit: int = 50, db: Session = Depends(get_db)):
+def get_user_events(user_id: int, limit: int = 50, db: Session = Depends(get_db)):
     """
     获取用户的行为历史
     """
@@ -122,7 +131,7 @@ def get_user_events(user_id: str, limit: int = 50, db: Session = Depends(get_db)
     return events
 
 @router.get("/events/post/{post_id}", response_model=List[schemas.EventResponse])
-def get_post_events(post_id: str, limit: int = 50, db: Session = Depends(get_db)):
+def get_post_events(post_id: int, limit: int = 50, db: Session = Depends(get_db)):
     """
     获取帖子的行为历史
     """

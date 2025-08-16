@@ -11,7 +11,7 @@ export const fetchPostDetail = createAsyncThunk(
       
       // 获取相关推荐
       const relatedResponse = await api.get(`/api/posts/${postId}/related`, {
-        params: { user_id: 'u1001', count: 5 }
+        params: { user_id: '1001', count: 5 }
       });
       
       return {

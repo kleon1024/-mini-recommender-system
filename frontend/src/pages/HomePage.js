@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { EyeOutlined, UserOutlined, LikeOutlined, StarOutlined, ExclamationCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { fetchRecommendations, resetRecommendations, updateItems } from '../store/recommendationsSlice';
-import { likePost, unlikePost, checkUserLike } from '../store/likesSlice';
-import { favoritePost, unfavoritePost, checkUserFavorite } from '../store/favoritesSlice';
+import { likePost, unlikePost } from '../store/likesSlice';
+import { favoritePost, unfavoritePost } from '../store/favoritesSlice';
+// checkUserLike和checkUserFavorite暂未使用
 import { getTracker } from '../utils/tracker';
 import { theme, combinedStyles } from '../styles/theme';
 
@@ -41,8 +42,8 @@ const HomePage = () => {
   const [collectedPosts, setCollectedPosts] = useState({});
   
   // 初始化埋点SDK
-  const userId = 'u1001';
-  const tracker = getTracker(userId);
+  const userId = 1001;
+  const tracker = getTracker(userId.toString());
   
   // 从Redux store获取推荐数据
   const { items, hasMore, status, error } = useSelector(state => state.recommendations);
@@ -51,7 +52,7 @@ const HomePage = () => {
   useEffect(() => {
     // 请求新数据
     dispatch(resetRecommendations());
-    dispatch(fetchRecommendations({ userId: 'u1001', page: 1, pageSize: 10 }))
+    dispatch(fetchRecommendations({ userId: 1001, page: 1, pageSize: 10 }))
       .unwrap()
       .then(response => {
         // 获取推荐列表后，检查每个帖子的点赞和收藏状态
@@ -83,7 +84,7 @@ const HomePage = () => {
       // 组件卸载时销毁观察器
       tracker.destroyViewObserver();
     };
-  }, [dispatch]);
+  }, [dispatch, tracker]);
   
   // 数据加载后初始化曝光观察器
   useEffect(() => {
@@ -178,7 +179,7 @@ const HomePage = () => {
     
     // 调用后端API进行点赞/取消点赞
     if (newLikedState) {
-      dispatch(likePost({ userId: 'u1001', postId }))
+      dispatch(likePost({ userId: 1001, postId }))
         .unwrap()
         .then(() => {
           // 更新本地状态
@@ -199,7 +200,7 @@ const HomePage = () => {
           showMessage('点赞失败: ' + (error.message || '未知错误'), 'error');
         });
     } else {
-      dispatch(unlikePost({ userId: 'u1001', postId }))
+      dispatch(unlikePost({ userId: 1001, postId }))
         .unwrap()
         .then(() => {
           // 更新本地状态
@@ -229,7 +230,7 @@ const HomePage = () => {
     
     // 调用后端API进行收藏/取消收藏
     if (newCollectedState) {
-      dispatch(favoritePost({ userId: 'u1001', postId }))
+      dispatch(favoritePost({ userId: 1001, postId }))
         .unwrap()
         .then(() => {
           // 更新本地状态
@@ -250,7 +251,7 @@ const HomePage = () => {
           showMessage('收藏失败: ' + (error.message || '未知错误'), 'error');
         });
     } else {
-      dispatch(unfavoritePost({ userId: 'u1001', postId }))
+      dispatch(unfavoritePost({ userId: 1001, postId }))
         .unwrap()
         .then(() => {
           // 更新本地状态
@@ -326,13 +327,23 @@ const HomePage = () => {
   
   // 如果加载失败，显示错误信息
   if (status === 'failed') {
+    // 处理错误信息
+    let errorMessage = '加载推荐内容失败';
+    if (error) {
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (typeof error === 'object') {
+        errorMessage = error.detail || JSON.stringify(error);
+      }
+    }
+    
     // 使用Tailwind样式显示错误信息
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center">
         <div className="mx-auto max-w-md rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-black/5 p-8 dark:bg-neutral-900/80 dark:ring-white/10 text-center">
           <ExclamationCircleOutlined className="text-red-500 text-2xl mb-2" />
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">加载失败</h3>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{error || '加载推荐内容失败'}</p>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{errorMessage}</p>
         </div>
       </div>
     );
@@ -379,7 +390,7 @@ const HomePage = () => {
                   <p 
                     className={`summary flex-1 mb-3 ${theme.text.body} line-clamp-3`}
                   >
-                    {items[currentIndex].content}
+                    {typeof items[currentIndex].content === 'object' ? JSON.stringify(items[currentIndex].content) : items[currentIndex].content}
                   </p>
                   <div className="mt-3">
                     {items[currentIndex].tags && items[currentIndex].tags.tags && 

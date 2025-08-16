@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from models.models import User, Post, Event, Feature
 import numpy as np
 from datetime import datetime, timedelta
+from redis_client import get_user_viewed_posts
 
 class RecommenderService:
     """
@@ -18,18 +19,21 @@ class RecommenderService:
     def get_recommendations(self, user_id: str, count: int = 10, offset: int = 0, filters: Optional[str] = None) -> Dict[str, Any]:
         """
         获取推荐内容
+        根据用户ID、数量、偏移量和过滤条件获取推荐内容
         """
-        # 导入json模块
-        import json
-        
-        # 解析filters JSON字符串
-        filter_dict = None
+        # 解析过滤条件
+        filter_dict = {}
         if filters:
             try:
                 filter_dict = json.loads(filters)
+                if not isinstance(filter_dict, dict):
+                    filter_dict = {}
             except json.JSONDecodeError:
                 # 如果JSON解析失败，忽略filters
                 pass
+        
+        # 添加用户ID到过滤条件，用于随机推荐时过滤已浏览内容
+        filter_dict['user_id'] = user_id
                 
         # 获取用户信息
         user = self.db.query(User).filter(User.user_id == user_id).first()
@@ -107,13 +111,20 @@ class RecommenderService:
         # 去重
         unique_posts = list({post.post_id: post for post in posts}.values())
         
-        # 获取用户已浏览的帖子ID
-        viewed_post_ids = set([
-            event.post_id for event in self.db.query(Event).filter(
-                Event.user_id == user.user_id,
-                Event.event_type.in_(["view", "click"])
-            ).all()
-        ])
+        # 获取用户已浏览的帖子ID（优先从Redis获取，Redis不可用时从数据库获取）
+        redis_viewed_post_ids = get_user_viewed_posts(user.user_id)
+        
+        # 如果Redis中没有数据，则从数据库获取
+        if not redis_viewed_post_ids:
+            db_viewed_post_ids = set([
+                event.post_id for event in self.db.query(Event).filter(
+                    Event.user_id == user.user_id,
+                    Event.event_type.in_(["view", "click"])
+                ).all()
+            ])
+            viewed_post_ids = db_viewed_post_ids
+        else:
+            viewed_post_ids = redis_viewed_post_ids
         
         # 过滤掉已浏览的帖子
         filtered_posts = [post for post in unique_posts if post.post_id not in viewed_post_ids]
@@ -185,9 +196,27 @@ class RecommenderService:
                     query = query.filter(Post.author_id == filters['author_id'])
             
             # 获取结果
-            recommended_posts = query.all()
+        recommended_posts = query.all()
         
-        return recommended_posts
+        # 获取用户已浏览的帖子ID（优先从Redis获取，Redis不可用时从数据库获取）
+        redis_viewed_post_ids = get_user_viewed_posts(user.user_id)
+        
+        # 如果Redis中没有数据，则从数据库获取
+        if not redis_viewed_post_ids:
+            db_viewed_post_ids = set([
+                event.post_id for event in self.db.query(Event).filter(
+                    Event.user_id == user.user_id,
+                    Event.event_type.in_(["view", "click"])
+                ).all()
+            ])
+            viewed_post_ids = db_viewed_post_ids
+        else:
+            viewed_post_ids = redis_viewed_post_ids
+        
+        # 过滤掉已浏览的帖子
+        filtered_posts = [post for post in recommended_posts if post.post_id not in viewed_post_ids]
+        
+        return filtered_posts
     
     def _recommend_random(self, count: int, filters: Optional[Dict[str, Any]] = None) -> List[Post]:
         """
@@ -234,6 +263,26 @@ class RecommenderService:
             
             # 获取结果
             recent_posts = query.all()
+        
+        # 获取用户已浏览的帖子ID（优先从Redis获取，Redis不可用时从数据库获取）
+        user_id = filters.get('user_id') if filters else None
+        if user_id:
+            redis_viewed_post_ids = get_user_viewed_posts(user_id)
+            
+            # 如果Redis中没有数据，则从数据库获取
+            if not redis_viewed_post_ids:
+                db_viewed_post_ids = set([
+                    event.post_id for event in self.db.query(Event).filter(
+                        Event.user_id == user_id,
+                        Event.event_type.in_(["view", "click"])
+                    ).all()
+                ])
+                viewed_post_ids = db_viewed_post_ids
+            else:
+                viewed_post_ids = redis_viewed_post_ids
+            
+            # 过滤掉已浏览的帖子
+            recent_posts = [post for post in recent_posts if post.post_id not in viewed_post_ids]
         
         # 随机选择
         if len(recent_posts) <= count:

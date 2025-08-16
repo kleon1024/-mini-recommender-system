@@ -1,34 +1,34 @@
 version: '3'
 
 services:
-  frontend:
-    build: ../frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
+  # frontend:
+  #   build: ../frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   volumes:
+  #     - ../frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8000
 
-  backend:
-    build: ../backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - mysql
-      - redis
-      - minio
-    volumes:
-      - ../backend:/app
-    environment:
-      - DATABASE_URL=mysql://user:password@mysql:3306/recommender
-      - REDIS_URL=redis://redis:6379/0
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+  # backend:
+  #   build: ../backend
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - mysql
+  #     - redis
+  #     - minio
+  #   volumes:
+  #     - ../backend:/app
+  #   environment:
+  #     - DATABASE_URL=mysql://user:password@mysql:3306/recommender
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - MINIO_ENDPOINT=minio:9000
+  #     - MINIO_ACCESS_KEY=minioadmin
+  #     - MINIO_SECRET_KEY=minioadmin
 
   mysql:
     image: mysql:8.0

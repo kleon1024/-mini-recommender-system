@@ -18,8 +18,8 @@ const PostDetailPage = () => {
   const { isLiked } = useSelector(state => state.likes);
   const { isFavorited } = useSelector(state => state.favorites);
   
-  // 默认使用u1001用户ID
-  const userId = 'u1001';
+  // 默认使用1001用户ID
+const userId = '1001';
   
   // 初始化埋点SDK
   const tracker = getTracker(userId);

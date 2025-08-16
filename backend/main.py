@@ -13,6 +13,7 @@ from database import get_db, init_db
 from models import models
 from schemas import schemas
 from routers import posts, events, users, data, model_api, likes, favorites
+from redis_client import check_redis_connection
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -45,7 +46,13 @@ app.include_router(favorites.router, prefix="/api", tags=["favorites"])
 # 启动事件
 @app.on_event("startup")
 def startup_event():
+    # 初始化数据库
     init_db()
+    
+    # 检查Redis连接
+    redis_connected = check_redis_connection()
+    if not redis_connected:
+        print("警告: Redis连接失败，消重系统将使用数据库进行消重")
 
 # 健康检查
 @app.get("/health")

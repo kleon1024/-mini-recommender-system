@@ -45,7 +45,7 @@ def trigger_data_processing(task: schemas.DataTaskCreate, db: Session = Depends(
     )
 
 @router.get("/data/process/{task_id}", response_model=schemas.DataTaskResponse)
-def get_data_processing_status(task_id: str, db: Session = Depends(get_db)):
+def get_data_processing_status(task_id: int, db: Session = Depends(get_db)):
     """
     获取数据处理任务状态
     """

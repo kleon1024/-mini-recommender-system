@@ -9,7 +9,7 @@ from schemas import schemas
 router = APIRouter()
 
 @router.get("/users/{user_id}", response_model=schemas.UserResponse)
-def get_user(user_id: str = Path(..., description="用户ID"), db: Session = Depends(get_db)):
+def get_user(user_id: int = Path(..., description="用户ID"), db: Session = Depends(get_db)):
     """
     获取用户信息
     """
@@ -20,7 +20,7 @@ def get_user(user_id: str = Path(..., description="用户ID"), db: Session = Dep
     return user
 
 @router.get("/users/{user_id}/activity", response_model=List[schemas.EventResponse])
-def get_user_activity(user_id: str = Path(..., description="用户ID"),
+def get_user_activity(user_id: int = Path(..., description="用户ID"),
                       limit: int = Query(20, description="返回数量"),
                       event_type: Optional[str] = Query(None, description="事件类型过滤"),
                       db: Session = Depends(get_db)):
@@ -63,7 +63,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.put("/users/{user_id}", response_model=schemas.UserResponse)
-def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
+def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
     """
     更新用户信息
     """
@@ -86,7 +86,7 @@ def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session = Dep
     return db_user
 
 @router.delete("/users/{user_id}", status_code=204)
-def delete_user(user_id: str, db: Session = Depends(get_db)):
+def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
     删除用户
     """

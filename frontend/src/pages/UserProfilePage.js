@@ -30,6 +30,15 @@ const UserProfilePage = () => {
   // 加载更多记录
   const loadMore = () => {
     setVisibleItems(prev => prev + 5);
+    
+    // 根据当前标签页重新加载数据
+    if (activeTab === 'activity') {
+      dispatch(fetchUserActivity(userId));
+    } else if (activeTab === 'likes') {
+      dispatch(fetchUserLikes(userId));
+    } else if (activeTab === 'favorites') {
+      dispatch(fetchUserFavorites(userId));
+    }
   };
   
   // 切换标签页时重置显示数量

@@ -15,12 +15,12 @@ def create_favorite(favorite: schemas.FavoriteCreate, db: Session = Depends(get_
     创建收藏
     """
     # 验证用户是否存在
-    user = db.query(User).filter(User.user_id == favorite.user_id).first()
+    user = db.query(User).filter(User.user_id == int(favorite.user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     # 验证帖子是否存在
-    post = db.query(Post).filter(Post.post_id == favorite.post_id).first()
+    post = db.query(Post).filter(Post.post_id == int(favorite.post_id)).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
@@ -88,7 +88,7 @@ def create_favorite(favorite: schemas.FavoriteCreate, db: Session = Depends(get_
         return result
 
 @router.delete("/favorites/{user_id}/{post_id}", status_code=204)
-def delete_favorite(user_id: str, post_id: str, db: Session = Depends(get_db)):
+def delete_favorite(user_id: int, post_id: int, db: Session = Depends(get_db)):
     """
     取消收藏
     """
@@ -124,7 +124,7 @@ def delete_favorite(user_id: str, post_id: str, db: Session = Depends(get_db)):
     return {"status": "success"}
 
 @router.get("/favorites/user/{user_id}", response_model=List[schemas.FavoriteResponse])
-def get_user_favorites(user_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_user_favorites(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     获取用户的所有收藏
     """
@@ -155,7 +155,7 @@ def get_user_favorites(user_id: str, skip: int = 0, limit: int = 100, db: Sessio
     return result
 
 @router.get("/favorites/post/{post_id}", response_model=List[schemas.FavoriteResponse])
-def get_post_favorites(post_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_post_favorites(post_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     获取帖子的所有收藏
     """
@@ -186,7 +186,7 @@ def get_post_favorites(post_id: str, skip: int = 0, limit: int = 100, db: Sessio
     return result
 
 @router.get("/favorites/check/{user_id}/{post_id}")
-def check_favorite(user_id: str, post_id: str, db: Session = Depends(get_db)):
+def check_favorite(user_id: int, post_id: int, db: Session = Depends(get_db)):
     """
     检查用户是否收藏了帖子
     """

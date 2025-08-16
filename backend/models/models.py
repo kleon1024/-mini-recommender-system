@@ -1,18 +1,22 @@
-from sqlalchemy import Column, String, Integer, Text, ForeignKey, DateTime, JSON, func, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, DateTime, JSON, func, UniqueConstraint, BigInteger
 from sqlalchemy.orm import relationship
 from database import Base
-import uuid
+import time
+import random
 from datetime import datetime
 
-# 生成UUID
-def generate_uuid():
-    return str(uuid.uuid4())
+# 生成唯一的bigint ID
+def generate_bigint_id():
+    # 使用时间戳和随机数生成唯一ID
+    timestamp = int(time.time() * 1000)  # 毫秒级时间戳
+    random_part = random.randint(1000, 9999)  # 随机数部分
+    return timestamp * 10000 + random_part  # 组合成唯一ID
 
 # 用户模型
 class User(Base):
     __tablename__ = "users"
     
-    user_id = Column(String(64), primary_key=True, default=generate_uuid)
+    user_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
     username = Column(String(64), nullable=False)
     create_time = Column(DateTime, default=datetime.utcnow)
     tags = Column(JSON)
@@ -26,10 +30,10 @@ class User(Base):
 class Post(Base):
     __tablename__ = "posts"
     
-    post_id = Column(String(64), primary_key=True, default=generate_uuid)
+    post_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
     title = Column(String(128), nullable=False)
     content = Column(Text, nullable=False)
-    author_id = Column(String(64), ForeignKey("users.user_id"), nullable=False)
+    author_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
     create_time = Column(DateTime, default=datetime.utcnow)
     tags = Column(JSON)
     view_count = Column(Integer, default=0)
@@ -44,9 +48,9 @@ class Post(Base):
 class Event(Base):
     __tablename__ = "events"
     
-    event_id = Column(String(64), primary_key=True, default=generate_uuid)
-    user_id = Column(String(64), ForeignKey("users.user_id"), nullable=False)
-    post_id = Column(String(64), ForeignKey("posts.post_id"), nullable=False)
+    event_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
+    user_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
+    post_id = Column(BigInteger, ForeignKey("posts.post_id"), nullable=False)
     event_type = Column(String(32), nullable=False)  # view, click, like, favorite, play, stay
     timestamp = Column(DateTime, default=datetime.utcnow)
     source = Column(String(64))
@@ -61,9 +65,9 @@ class Event(Base):
 class Feature(Base):
     __tablename__ = "features"
     
-    feature_id = Column(String(64), primary_key=True, default=generate_uuid)
+    feature_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
     entity_type = Column(String(32), nullable=False)  # user, post
-    entity_id = Column(String(64), nullable=False)
+    entity_id = Column(BigInteger, nullable=False)
     feature_type = Column(String(32), nullable=False)
     feature_value = Column(JSON, nullable=False)
     update_time = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -72,9 +76,9 @@ class Feature(Base):
 class Like(Base):
     __tablename__ = "likes"
     
-    like_id = Column(String(64), primary_key=True, default=generate_uuid)
-    user_id = Column(String(64), ForeignKey("users.user_id"), nullable=False)
-    post_id = Column(String(64), ForeignKey("posts.post_id"), nullable=False)
+    like_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
+    user_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
+    post_id = Column(BigInteger, ForeignKey("posts.post_id"), nullable=False)
     create_time = Column(DateTime, default=datetime.utcnow)
     
     # 关系
@@ -88,9 +92,9 @@ class Like(Base):
 class Favorite(Base):
     __tablename__ = "favorites"
     
-    favorite_id = Column(String(64), primary_key=True, default=generate_uuid)
-    user_id = Column(String(64), ForeignKey("users.user_id"), nullable=False)
-    post_id = Column(String(64), ForeignKey("posts.post_id"), nullable=False)
+    favorite_id = Column(BigInteger, primary_key=True, default=generate_bigint_id)
+    user_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
+    post_id = Column(BigInteger, ForeignKey("posts.post_id"), nullable=False)
     create_time = Column(DateTime, default=datetime.utcnow)
     
     # 关系

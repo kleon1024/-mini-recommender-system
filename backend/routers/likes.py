@@ -15,12 +15,12 @@ def create_like(like: schemas.LikeCreate, db: Session = Depends(get_db)):
     创建点赞
     """
     # 验证用户是否存在
-    user = db.query(User).filter(User.user_id == like.user_id).first()
+    user = db.query(User).filter(User.user_id == int(like.user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     # 验证帖子是否存在
-    post = db.query(Post).filter(Post.post_id == like.post_id).first()
+    post = db.query(Post).filter(Post.post_id == int(like.post_id)).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
@@ -56,7 +56,7 @@ def create_like(like: schemas.LikeCreate, db: Session = Depends(get_db)):
         return existing_like
 
 @router.delete("/likes/{user_id}/{post_id}", status_code=204)
-def delete_like(user_id: str, post_id: str, db: Session = Depends(get_db)):
+def delete_like(user_id: int, post_id: int, db: Session = Depends(get_db)):
     """
     取消点赞
     """
@@ -92,7 +92,7 @@ def delete_like(user_id: str, post_id: str, db: Session = Depends(get_db)):
     return {"status": "success"}
 
 @router.get("/likes/user/{user_id}", response_model=List[schemas.LikeResponse])
-def get_user_likes(user_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_user_likes(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     获取用户的所有点赞
     """
@@ -107,7 +107,7 @@ def get_user_likes(user_id: str, skip: int = 0, limit: int = 100, db: Session = 
     return likes
 
 @router.get("/likes/post/{post_id}", response_model=List[schemas.LikeResponse])
-def get_post_likes(post_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_post_likes(post_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     获取帖子的所有点赞
     """
@@ -122,7 +122,7 @@ def get_post_likes(post_id: str, skip: int = 0, limit: int = 100, db: Session = 
     return likes
 
 @router.get("/likes/check/{user_id}/{post_id}")
-def check_like(user_id: str, post_id: str, db: Session = Depends(get_db)):
+def check_like(user_id: int, post_id: int, db: Session = Depends(get_db)):
     """
     检查用户是否点赞了帖子
     """
