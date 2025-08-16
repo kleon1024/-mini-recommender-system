@@ -1,0 +1,107 @@
+/* Tailwind自定义样式类 */
+
+/* 背景（全局容器） */
+.page-bg {
+  @apply min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800;
+}
+
+/* 卡片容器（白底内容块） */
+.card {
+  @apply mx-auto max-w-3xl rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-black/5 p-8 dark:bg-neutral-900/80 dark:ring-white/10;
+}
+
+/* 标题（主标题） */
+.title {
+  @apply text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100;
+}
+
+/* 副标题 / 描述 */
+.summary {
+  @apply mt-2 text-sm text-neutral-600 dark:text-neutral-400;
+}
+
+/* 按钮（主操作按钮） */
+.primary-btn {
+  @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+/* 小按钮 / 次要操作 */
+.secondary-btn {
+  @apply inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800;
+}
+
+/* 输入框 */
+.input-field {
+  @apply block w-full rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm text-neutral-900 placeholder-neutral-400 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500;
+}
+
+/* 容器 */
+.container {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* 标签 */
+.tag {
+  @apply inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-700/30;
+}
+
+/* 统计容器 */
+.stats-container {
+  @apply flex flex-wrap gap-4;
+}
+
+/* 统计项 */
+.stat-item {
+  @apply flex items-center;
+}
+
+/* 统计图标 */
+.stat-icon {
+  @apply text-blue-600 mr-2;
+}
+
+/* 统计数字 */
+.stat-number {
+  @apply text-sm font-medium text-neutral-700 dark:text-neutral-300;
+}
+
+/* 作者信息 */
+.author {
+  @apply flex items-center text-sm text-neutral-600 dark:text-neutral-400;
+}
+
+/* 收藏按钮 */
+.bookmark-btn {
+  @apply p-2 text-neutral-500 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 transition-colors;
+}
+
+/* 收藏图标 */
+.bookmark-icon {
+  @apply text-lg;
+}
+
+/* 卡片头部 */
+.card-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+/* 卡片内容 */
+.card-content {
+  @apply mb-4;
+}
+
+/* 卡片底部 */
+.card-footer {
+  @apply flex justify-between items-center mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700;
+}
+
+/* 边距工具类已由Tailwind CSS原生提供，无需重复定义 */
+
+/* 骨架屏 */
+.skeleton {
+  @apply animate-pulse bg-neutral-200 dark:bg-neutral-700 rounded;
+}
+
+.skeleton-line {
+  @apply h-4 w-full skeleton mb-2;
+}

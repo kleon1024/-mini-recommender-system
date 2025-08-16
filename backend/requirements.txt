@@ -1,0 +1,28 @@
+# --- Web 框架 ---
+fastapi==0.103.0        # 稳定版，支持 pydantic v1
+uvicorn==0.22.0
+
+# --- 数据库 ---
+sqlalchemy==2.0.15
+pymysql==1.0.3
+
+# --- 数据模型 ---
+pydantic==1.10.13        # fastapi 0.103 默认依赖 pydantic v1
+
+# --- 科学计算 & 机器学习 ---
+numpy==1.24.3
+scipy==1.10.1
+pandas==2.0.3
+scikit-learn==1.2.2
+torch==2.0.1             # CPU/GPU 版本按需调整
+
+# --- 存储 & 缓存 ---
+minio==7.1.15
+redis==4.5.5
+
+# --- 工具类 ---
+python-dotenv==1.0.0
+python-multipart==0.0.6
+PyJWT==2.6.0
+passlib==1.7.4
+cryptography==45.0.6
