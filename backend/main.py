@@ -15,11 +15,15 @@ from schemas import schemas
 from routers import posts, events, users, data, model_api, likes, favorites
 from redis_client import check_redis_connection
 
+# 定义版本信息
+API_VERSION = "1.2.0"
+API_RELEASE_DATE = "2023-06-15"
+
 # 创建FastAPI应用
 app = FastAPI(
     title="迷你推荐系统API",
-    description="迷你推荐系统后端API服务",
-    version="0.1.0"
+    version=API_VERSION,
+    description=f"迷你推荐系统后端API，版本{API_VERSION}，发布日期{API_RELEASE_DATE}"
 )
 
 # 配置JSON响应，确保中文字符不被转义
