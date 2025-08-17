@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
+import logging
 
 from database import get_db
 from models.models import Post, User, Event
@@ -8,6 +9,9 @@ from schemas import schemas
 from services.recommender import RecommenderService
 from routers import likes, favorites
 from redis_client import record_user_viewed_post
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -51,6 +55,7 @@ def get_post_detail(post_id: int = Path(..., description="帖子ID"),
     
     # 如果提供了用户ID，记录用户浏览记录到Redis
     if user_id:
+        logger.info(f"帖子系统: 记录用户[{user_id}]浏览帖子[{post_id}]到消重系统")
         record_user_viewed_post(user_id, post_id)
     
     # 获取作者信息

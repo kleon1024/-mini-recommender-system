@@ -1,0 +1,13 @@
+# 数据分析系统定时任务配置
+
+# 每小时执行一次增量同步
+0 * * * * /scripts/cron_jobs.sh
+
+# 每天凌晨2点执行一次ETL流程
+0 2 * * * /scripts/cron_jobs.sh etl
+
+# 每周日凌晨3点执行一次全量同步
+0 3 * * 0 /scripts/cron_jobs.sh full
+
+# 每5分钟执行一次用户推荐池更新
+*/5 * * * * /scripts/cron_jobs.sh etl

@@ -1,11 +1,15 @@
 from typing import List, Dict, Any, Optional
 import random
 import json
+import logging
 from sqlalchemy.orm import Session
 from models.models import User, Post, Event, Feature
 import numpy as np
 from datetime import datetime, timedelta
 from redis_client import get_user_viewed_posts
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 class RecommenderService:
     """
@@ -110,12 +114,14 @@ class RecommenderService:
         
         # 去重
         unique_posts = list({post.post_id: post for post in posts}.values())
+        logger.info(f"推荐系统: 用户[{user.user_id}]推荐前去重后的帖子数量: {len(unique_posts)}")
         
         # 获取用户已浏览的帖子ID（优先从Redis获取，Redis不可用时从数据库获取）
         redis_viewed_post_ids = get_user_viewed_posts(user.user_id)
         
         # 如果Redis中没有数据，则从数据库获取
         if not redis_viewed_post_ids:
+            logger.info(f"推荐系统: 用户[{user.user_id}]的Redis消重数据为空，从数据库获取")
             db_viewed_post_ids = set([
                 event.post_id for event in self.db.query(Event).filter(
                     Event.user_id == user.user_id,
@@ -123,11 +129,19 @@ class RecommenderService:
                 ).all()
             ])
             viewed_post_ids = db_viewed_post_ids
+            logger.info(f"推荐系统: 用户[{user.user_id}]从数据库获取的已浏览帖子数量: {len(viewed_post_ids)}")
         else:
             viewed_post_ids = redis_viewed_post_ids
+            logger.info(f"推荐系统: 用户[{user.user_id}]从Redis获取的已浏览帖子数量: {len(viewed_post_ids)}")
         
         # 过滤掉已浏览的帖子
         filtered_posts = [post for post in unique_posts if post.post_id not in viewed_post_ids]
+        logger.info(f"推荐系统: 用户[{user.user_id}]消重后的推荐帖子数量: {len(filtered_posts)}, 过滤掉: {len(unique_posts) - len(filtered_posts)}篇")
+        
+        # 记录被过滤掉的帖子ID
+        if len(unique_posts) > len(filtered_posts):
+            filtered_post_ids = [post.post_id for post in unique_posts if post.post_id in viewed_post_ids]
+            logger.info(f"推荐系统: 用户[{user.user_id}]被过滤掉的帖子IDs: {filtered_post_ids}")
         
         return filtered_posts[:count]
     

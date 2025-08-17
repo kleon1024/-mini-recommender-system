@@ -1,37 +1,11 @@
 version: '3'
 
 services:
-  # frontend:
-  #   build: ../frontend
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - backend
-  #   volumes:
-  #     - ../frontend:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - REACT_APP_API_URL=http://localhost:8000
-
-  # backend:
-  #   build: ../backend
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - mysql
-  #     - redis
-  #     - minio
-  #   volumes:
-  #     - ../backend:/app
-  #   environment:
-  #     - DATABASE_URL=mysql://user:password@mysql:3306/recommender
-  #     - REDIS_URL=redis://redis:6379/0
-  #     - MINIO_ENDPOINT=minio:9000
-  #     - MINIO_ACCESS_KEY=minioadmin
-  #     - MINIO_SECRET_KEY=minioadmin
-
+  # 核心服务 - 业务数据库
   mysql:
     image: mysql:8.0
+    container_name: mysql
+    restart: always
     ports:
       - "3306:3306"
     environment:
@@ -43,13 +17,22 @@ services:
       - mysql_data:/var/lib/mysql
       - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  # 缓存服务 - 用于存储推荐池和消重
   redis:
     image: redis:7.0
+    container_name: redis
+    restart: always
     ports:
       - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redispassword
+    volumes:
+      - redis_data:/data
 
+  # 对象存储 - 用于存储模型和大文件
   minio:
     image: minio/minio
+    container_name: minio
+    restart: always
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -60,6 +43,117 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
+  # 数据分析数据库 - PostgreSQL
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=datawarehouse
+      - POSTGRES_MULTIPLE_DATABASES=metabase,datawarehouse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./scripts/create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh:ro
+    command: -c shared_buffers=256MB -c max_connections=200
+
+  # 数据库管理工具 - Adminer
+  adminer:
+    image: adminer:4.8.1
+    container_name: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=mysql
+      - ADMINER_DESIGN=pepa-linha
+    depends_on:
+      - mysql
+      - postgres
+
+  # 数据可视化工具 - Metabase
+  metabase:
+    image: metabase/metabase:v0.49.14
+    container_name: metabase
+    restart: always
+    ports:
+      - "3030:3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=postgres
+      - MB_DB_PASS=postgres
+      - MB_DB_HOST=localhost
+    depends_on:
+      - postgres
+
+  # PostgreSQL管理工具 - pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:8.9
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+      
+  # ETL服务 - 数据同步和处理 (暂时注释掉，因为缺少Dockerfile.etl)
+  # etl:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.etl
+  #   container_name: etl
+  #   restart: on-failure
+  #   depends_on:
+  #     - mysql
+  #     - postgres
+  #     - redis
+  #   volumes:
+  #     - ./scripts:/app/scripts
+  #   environment:
+  #     - WAIT_HOSTS=mysql:3306,postgres:5432
+  #     - WAIT_HOSTS_TIMEOUT=300
+  #     - WAIT_SLEEP_INTERVAL=10
+  #     - WAIT_HOST_CONNECT_TIMEOUT=30
+
 volumes:
   mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/mysql
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
   minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/minio
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
+  pgadmin_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/pgadmin

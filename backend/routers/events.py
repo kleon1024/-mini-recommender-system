@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List
+import logging
 
 from database import get_db
 from models.models import Event, User, Post
 from schemas import schemas
 from redis_client import record_user_viewed_post
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -95,6 +99,7 @@ def create_batch_events(batch: schemas.BatchEventCreate, db: Session = Depends(g
         
         # 如果是浏览或点击事件，记录到Redis中用于消重
         if event.event_type in ["view", "click"]:
+            logger.info(f"事件系统: 记录用户[{event.user_id}]的[{event.event_type}]事件到消重系统, 帖子ID[{event.post_id}]")
             record_user_viewed_post(int(event.user_id), int(event.post_id))
     
     # 批量添加事件

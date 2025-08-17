@@ -1,7 +1,12 @@
 from typing import Optional
 import redis
 import os
+import logging
 from dotenv import load_dotenv
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # 加载环境变量
 load_dotenv()
@@ -44,9 +49,10 @@ def record_user_viewed_post(user_id: int, post_id: int) -> bool:
         # 将整数ID转换为字符串存储
         redis_client.sadd(key, str(post_id))
         redis_client.expire(key, VIEWED_POSTS_EXPIRE_TIME)  # 设置过期时间
+        logger.info(f"消重系统: 记录用户[{user_id}]浏览帖子[{post_id}], 键名[{key}]")
         return True
     except Exception as e:
-        print(f"记录用户浏览帖子失败: {e}")
+        logger.error(f"消重系统: 记录用户[{user_id}]浏览帖子[{post_id}]失败: {e}")
         return False
 
 # 获取用户浏览过的所有帖子ID
@@ -59,9 +65,11 @@ def get_user_viewed_posts(user_id: int) -> set:
         # 获取字符串ID并转换为整数
         str_ids = redis_client.smembers(key)
         # 将字符串ID转换为整数ID
-        return {int(post_id) for post_id in str_ids}
+        viewed_posts = {int(post_id) for post_id in str_ids}
+        logger.info(f"消重系统: 获取用户[{user_id}]已浏览帖子, 键名[{key}], 数量[{len(viewed_posts)}], IDs: {viewed_posts}")
+        return viewed_posts
     except Exception as e:
-        print(f"获取用户浏览帖子失败: {e}")
+        logger.error(f"消重系统: 获取用户[{user_id}]已浏览帖子失败: {e}")
         return set()
 
 # 检查用户是否浏览过指定帖子
@@ -72,7 +80,9 @@ def has_user_viewed_post(user_id: int, post_id: int) -> bool:
     try:
         key = f"{USER_VIEWED_POSTS_PREFIX}{user_id}"
         # 将整数ID转换为字符串进行查询
-        return redis_client.sismember(key, str(post_id))
+        result = redis_client.sismember(key, str(post_id))
+        logger.info(f"消重系统: 检查用户[{user_id}]是否浏览过帖子[{post_id}], 键名[{key}], 结果: {result}")
+        return result
     except Exception as e:
-        print(f"检查用户浏览帖子失败: {e}")
+        logger.error(f"消重系统: 检查用户[{user_id}]是否浏览过帖子[{post_id}]失败: {e}")
         return False

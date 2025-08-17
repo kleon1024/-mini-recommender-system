@@ -4,6 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import uvicorn
 import os
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 导入自定义JSONResponse
 from utils.json_utils import CustomJSONResponse
@@ -12,7 +16,8 @@ from utils.json_utils import CustomJSONResponse
 from database import get_db, init_db
 from models import models
 from schemas import schemas
-from routers import posts, events, users, data, model_api, likes, favorites
+from schemas import etl_schemas
+from routers import posts, events, users, data, model_api, likes, favorites, etl
 from redis_client import check_redis_connection
 
 # 定义版本信息
@@ -46,6 +51,7 @@ app.include_router(data.router, prefix="/api", tags=["data"])
 app.include_router(model_api.router, prefix="/api", tags=["models"])
 app.include_router(likes.router, prefix="/api", tags=["likes"])
 app.include_router(favorites.router, prefix="/api", tags=["favorites"])
+app.include_router(etl.router, prefix="/api", tags=["etl"])
 
 # 启动事件
 @app.on_event("startup")
@@ -57,6 +63,8 @@ def startup_event():
     redis_connected = check_redis_connection()
     if not redis_connected:
         print("警告: Redis连接失败，消重系统将使用数据库进行消重")
+    else:
+        print("Redis连接成功")
 
 # 健康检查
 @app.get("/health")

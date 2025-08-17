@@ -1,11 +1,12 @@
 import React, { useState, useEffect, Component } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { HomeOutlined, UserOutlined, BarChartOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined, BarChartOutlined, DatabaseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { theme, combinedStyles } from './styles/theme';
 import HomePage from './pages/HomePage';
 import PostDetailPage from './pages/PostDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
 import DashboardPage from './pages/DashboardPage';
+import ETLManagement from './pages/ETLManagement';
 
 
 // 错误边界组件
@@ -72,6 +73,7 @@ const App = () => {
     if (path.startsWith('/post/')) return '1';
     if (path.startsWith('/user/')) return '2';
     if (path.startsWith('/dashboard')) return '3';
+    if (path.startsWith('/etl')) return '4';
     return '1'; // 默认选中首页
   };
 
@@ -103,6 +105,13 @@ const App = () => {
               <BarChartOutlined className="mr-1" />
               数据看板
             </Link>
+            <Link 
+              to="/etl" 
+              className={getSelectedKey() === '4' ? combinedStyles.navLink(true) : combinedStyles.navLink(false)}
+            >
+              <DatabaseOutlined className="mr-1" />
+              ETL管理
+            </Link>
           </nav>
         </div>
       </header>
@@ -112,6 +121,7 @@ const App = () => {
           <Route path="/post/:postId" element={<PostDetailPage />} />
           <Route path="/user/:userId" element={<UserProfilePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/etl" element={<ETLManagement />} />
         </Routes>
       </main>
       <footer className="py-4 mt-auto text-center text-sm bg-white">

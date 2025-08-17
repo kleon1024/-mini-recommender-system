@@ -5,6 +5,73 @@ import time
 import random
 from datetime import datetime
 
+# ETL相关模型
+class DatabaseConnection(Base):
+    __tablename__ = "database_connections"
+    
+    connection_id = Column(BigInteger, primary_key=True, default=lambda: generate_bigint_id())
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    connection_type = Column(String(20), nullable=False)  # mysql, postgres, redis
+    host = Column(String(100), nullable=False)
+    port = Column(Integer, nullable=False)
+    username = Column(String(100))
+    password = Column(String(100))
+    database = Column(String(100))
+    config = Column(JSON)  # 其他连接配置
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class ETLTask(Base):
+    __tablename__ = "etl_tasks"
+    
+    task_id = Column(BigInteger, primary_key=True, default=lambda: generate_bigint_id())
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    task_type = Column(String(50), nullable=False)  # mysql_to_postgres, postgres_to_redis, mysql_to_redis, custom_sql
+    source_connection_id = Column(BigInteger, ForeignKey("database_connections.connection_id"))
+    target_connection_id = Column(BigInteger, ForeignKey("database_connections.connection_id"), nullable=True)
+    config = Column(JSON, nullable=False)  # 任务配置，如表名、查询、批量大小等
+    schedule = Column(String(100))  # cron表达式
+    status = Column(String(20), default="pending")  # pending, running, completed, failed, cancelled
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    result = Column(JSON)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # 关系
+    source_connection = relationship("DatabaseConnection", foreign_keys=[source_connection_id])
+    target_connection = relationship("DatabaseConnection", foreign_keys=[target_connection_id])
+
+class ETLTaskHistory(Base):
+    __tablename__ = "etl_task_history"
+    
+    history_id = Column(BigInteger, primary_key=True, default=lambda: generate_bigint_id())
+    task_id = Column(BigInteger, ForeignKey("etl_tasks.task_id"), nullable=False)
+    status = Column(String(20), nullable=False)  # completed, failed
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    rows_processed = Column(Integer, default=0)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # 关系
+    task = relationship("ETLTask")
+
+class ETLLog(Base):
+    __tablename__ = "etl_logs"
+    
+    log_id = Column(BigInteger, primary_key=True, default=lambda: generate_bigint_id())
+    task_id = Column(BigInteger, ForeignKey("etl_tasks.task_id"), nullable=False)
+    log_level = Column(String(16), nullable=False)  # info, warning, error
+    message = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    
+    # 关系
+    task = relationship("ETLTask")
+
 # 生成唯一的bigint ID
 def generate_bigint_id():
     # 使用时间戳和随机数生成唯一ID
